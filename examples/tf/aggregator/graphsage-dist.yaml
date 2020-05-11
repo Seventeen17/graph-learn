@@ -1,0 +1,70 @@
+apiVersion: "kubeflow.org/v1"
+kind: "TFJob"
+metadata:
+  name: "tf-aggregate-dist"
+spec:
+  tfReplicaSpecs:
+    PS:
+      replicas: 2
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - args:
+            - python
+            - graph_learn_launcher.py
+            - dist_train_graphsage.py
+            image: registry.cn-zhangjiakou.aliyuncs.com/pai-image/graph-learn:v0.1-gpu
+            name: tensorflow
+            ports:
+            - containerPort: 2222
+              name: tfjob-port
+            resources:
+              limits:
+                cpu: '1'
+            workingDir: /workspace/aggregator/
+            volumeMounts:
+              - mountPath: /mnt/data/nfs
+                name: graphlearn-path
+              - mountPath: /workspace
+                name: graph-learn-repo
+          volumes:
+            - name: graphlearn-path
+              hostPath:
+                path: /mnt/data/nfs
+            - name: graph-learn-repo
+              persistentVolumeClaim:
+                claimName: graphlearn-pvc
+    Worker:
+      replicas: 2
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - args:
+            - python
+            - graph_learn_launcher.py
+            - dist_train_graphsage.py
+            image: registry.cn-zhangjiakou.aliyuncs.com/pai-image/graph-learn:v0.1-gpu
+            name: tensorflow
+            ports:
+            - containerPort: 2222
+              name: tfjob-port
+            resources:
+              limits:
+                nvidia.com/gpu: 1
+            workingDir: /workspace/aggregator/
+            volumeMounts:
+              - mountPath: /mnt/data/nfs
+                name: graphlearn-path
+              - mountPath: /workspace
+                name: graph-learn-repo
+          volumes:
+            - name: graphlearn-path
+              hostPath:
+                path: /mnt/data/nfs
+            - name: graph-learn-repo
+              persistentVolumeClaim:
+                claimName: graphlearn-pvc

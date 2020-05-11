@@ -62,7 +62,8 @@ def train(config, graph):
                      neighs_num=config['neighs_num'],
                      hops_num=config['hops_num'],
                      agg_type=config['agg_type'],
-                     full_graph_mode=config['full_graph_mode'])
+                     full_graph_mode=config['full_graph_mode'],
+                     pre_agg=config['pre_agg'],)
   trainer = gl.LocalTFTrainer(model_fn,
                               epoch=config['epoch'],
                               optimizer=gl.get_tf_optimizer(
@@ -84,13 +85,14 @@ def main():
             'hops_num': 2,
             'neighs_num': [25, 10],
             'full_graph_mode': False,
-            'agg_type': 'gcn',
+            'agg_type': 'sum',
             'learning_algo': 'adam',
             'learning_rate': 0.01,
             'weight_decay': 0.0005,
             'epoch': 40,
             'node_type': 'item',
-            'edge_type': 'relation'}
+            'edge_type': 'relation',
+            'pre_agg': False,}
 
   g = load_graph(config)
   g.init(server_id=0, server_count=1, tracker=TRACKER_PATH)

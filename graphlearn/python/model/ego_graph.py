@@ -41,7 +41,7 @@ class EgoGraph(object):
   def hops(self):
     return self._hops
 
-  def flatten(self, spec):
+  def flatten(self, spec, pre_agg=False):
     """Return flatten list format of EgoGraph.
     Note that all int_attrs and float_attrs from sampled results
     will be convert to continuous attrs.
@@ -62,10 +62,17 @@ class EgoGraph(object):
     for i in range(len(spec.hops_spec)):
       # Nodes
       if spec.hops_spec[i].node_spec is not None:
-        flatten_list.extend(self._flatten_impl(
-            self._hops[i].nodes,
-            spec.hops_spec[i].node_spec,
-            spec.hops_spec[i].sparse))
+        if i == len(spec.hops_spec) - 1:
+          flatten_list.extend(self._flatten_impl(
+              self._hops[i].nodes,
+              spec.hops_spec[i].node_spec,
+              spec.hops_spec[i].sparse,
+              pre_agg=pre_agg))
+        else:
+          flatten_list.extend(self._flatten_impl(
+              self._hops[i].nodes,
+              spec.hops_spec[i].node_spec,
+              spec.hops_spec[i].sparse))
       # Edges
       if spec.hops_spec[i].edge_spec is not None:
         flatten_list.extend(self._flatten_impl(
@@ -75,7 +82,7 @@ class EgoGraph(object):
 
     return flatten_list
 
-  def _flatten_impl(self, feature, feature_spec=None, sparse=False):
+  def _flatten_impl(self, feature, feature_spec=None, sparse=False, pre_agg=False):
     """help function for flatten.
     Args:
       feature: Nodes or Edges.
@@ -105,8 +112,11 @@ class EgoGraph(object):
     # attrs
     int_attrs = float_attrs = string_attrs = None
     if feature_spec.cont_attrs_num > 0:
-      int_attrs = feature.int_attrs # [num_int_attrs, ids.shape]
-      float_attrs = feature.float_attrs # [num_float_attrs,ids.shape]
+      int_attrs = feature.int_attrs # [ids.shape, num_float_attrs]
+      if not pre_agg:
+        float_attrs = feature.float_attrs # [ids.shape, num_float_attrs]
+      else:
+        float_attrs = feature.embedding_agg(func="sum")
 
     if feature_spec.cate_attrs_num > 0:
       string_attrs = feature.string_attrs

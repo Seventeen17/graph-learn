@@ -89,6 +89,31 @@ def main(argv):
     print(s.get(np.array([0, 1, 2])).ids)
     print("InDegree Negative Sample Done...")
 
+    s = g.neighbor_sampler("buy", expand_factor=2, strategy="full")
+    start_time = time.time()
+    with tf.Session() as sess:
+      for i in range(100):
+        try:
+          nodes = s.get(np.array([1, 2, 3])).layer_nodes(1)
+          neigh_vecs = tf.convert_to_tensor(nodes.float_attrs)
+          sess.run(neigh_vecs)
+        except gl.OutOfRangeError:
+          continue
+    print("100 iter time not agg:", str(time.time()-start_time))
+
+    s = g.neighbor_sampler("buy", expand_factor=2, strategy="full")
+    start_time = time.time()
+    with tf.Session() as sess:
+      for i in range(100):
+        try:
+          nodes = s.get(np.array([1, 2, 3])).layer_nodes(1)
+          neigh_vecs = tf.convert_to_tensor(nodes.embedding_agg())
+          vecs = tf.reduce_sum(neigh_vecs, axis=1)
+          sess.run(vecs)
+        except gl.OutOfRangeError:
+          continue
+    print("100 iter time with agg:", str(time.time()-start_time))
+
 
 if __name__ == "__main__":
   main(sys.argv[1:])

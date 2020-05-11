@@ -64,7 +64,7 @@ class GraphSage(gl.LearningBasedModel):
                neg_num=10,
                node_type='item',
                edge_type='relation',
-               pre_agg=False,):
+               pre_agg=False):
 
     super(GraphSage, self).__init__(graph,
                                     batch_size,
@@ -128,22 +128,22 @@ class GraphSage(gl.LearningBasedModel):
     feature_encoders = [gl.encoders.IdentityEncoder()] * (depth + 1)
     conv_layers = []
     for i in range(depth):
-      input_dim = self.features_num if i == 0 else self.hidden_dim
-      output_dim = self.output_dim if i == depth - 1 else self.hidden_dim
-      act = None if (i == depth - 1 and depth != 1) else tf.nn.relu
-      conv_layers.append(gl.layers.GraphSageConv(i,
-                                                  input_dim,
-                                                  output_dim,
-                                                  self.agg_type,
-                                                  act))
-    
+        input_dim = self.features_num if i == 0 else self.hidden_dim
+        output_dim = self.output_dim if i == depth - 1 else self.hidden_dim
+        act = None if (i == depth - 1 and depth != 1) else tf.nn.relu
+        conv_layers.append(gl.layers.GraphSageConv(i,
+                                                   input_dim,
+                                                   output_dim,
+                                                   self.agg_type,
+                                                   act))
+
+
     neighs_num = self.neighs_num
     if self.pre_agg:
       neighs_num[-1] = 1
-
     encoder = gl.encoders.EgoGraphEncoder(feature_encoders,
                                           conv_layers,
-                                          self.neighs_num,
+                                          neighs_num,
                                           dropout=self.in_drop)
     return {"src": encoder, "edge": None, "dst": encoder}
 

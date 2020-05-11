@@ -13,7 +13,6 @@
 # limitations under the License.
 # =============================================================================
 """Distributed training script for supervised GraphSage.
-
 This simple example uses two machines and each has one TensorFlow worker and ps.
 Graph-learn client is colocate with TF worker, and server with ps.
 """
@@ -35,11 +34,13 @@ flags.DEFINE_integer("task_index", None, "Task index")
 flags.DEFINE_string("job_name", None, "worker or ps")
 flags.DEFINE_string("ps_hosts", "", "ps hosts")
 flags.DEFINE_string("worker_hosts", "", "worker hosts")
-flags.DEFINE_string("tracker", '/mnt/data/nfs/graph-learn/distributed/','tracker dir')
+flags.DEFINE_string("tracker", '/mnt/data/nfs/graph-learn/aggregator/','tracker dir')
 
 # Note: tracker dir should be cleaned up before training.
 # graphlearn settings
-graph_cluster = {"client_count": 2, "tracker": FLAGS.tracker, "server_count": 2}
+client_count = len(FLAGS.worker_hosts.split(","))
+server_count = len(FLAGS.ps_hosts.split(","))
+graph_cluster = {"client_count": client_count, "tracker": FLAGS.tracker, "server_count": server_count}
 
 
 def load_graph(config):
@@ -94,9 +95,9 @@ def train(config, graph):
 
 def main():
   print("main")
-  config = {'dataset_folder': '../../data/cora/',
+  config = {'dataset_folder': 'data/',
             'class_num': 7,
-            'features_num': 1433,
+            'features_num': 225, #1433
             'batch_size': 10, # total 140
             'val_batch_size': 10, # total 300
             'test_batch_size': 10, # total 1000
@@ -104,7 +105,7 @@ def main():
             'hidden_dim': 128,
             'in_drop_rate': 0.5,
             'hops_num': 2,
-            'neighs_num': [5, 2], # [25, 10]
+            'neighs_num': [10, 20], # [25, 10]
             'full_graph_mode': False,
             'learning_algo': 'adam',
             'learning_rate': 0.01,
@@ -113,7 +114,7 @@ def main():
             'epoch': 40,
             'node_type': 'item',
             'edge_type': 'relation',
-            'pre_agg': False,}
+            'pre_agg': True}
 
   g = load_graph(config)
   g_role = "server"

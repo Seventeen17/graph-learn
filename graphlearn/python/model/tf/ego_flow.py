@@ -50,7 +50,8 @@ class EgoFlow(object):
                dst_ego_spec=None,
                edge_ego_spec=None,
                negative_sample=None,
-               full_graph_mode=False):
+               full_graph_mode=False,
+               pre_agg=False):
     """init EgoGraphFlow using sample functions and related EgoSpecs.
     """
 
@@ -64,6 +65,7 @@ class EgoFlow(object):
     self._edge_ego_spec = edge_ego_spec
 
     self._full_graph_mode = full_graph_mode
+    self._pre_agg = pre_agg
 
     self._iterator = None
     self._pos_src_ego_tensor, \
@@ -211,22 +213,22 @@ class EgoFlow(object):
              
         egographs_tuple = tuple()
         pos_src_flatten_egograph = \
-          pos_src_recept.flatten(spec = self._src_ego_spec)
+          pos_src_recept.flatten(spec = self._src_ego_spec, pre_agg=self._pre_agg)
         egographs_tuple += tuple(pos_src_flatten_egograph)
 
         if pos_dst_recept is not None:
           pos_dst_flatten_egograph = \
-            pos_dst_recept.flatten(spec = self._dst_ego_spec)
+            pos_dst_recept.flatten(spec = self._dst_ego_spec, pre_agg=self._pre_agg)
           egographs_tuple += tuple(pos_dst_flatten_egograph)
 
         if neg_src_recept is not None:
           neg_src_flatten_egograph = \
-            neg_src_recept.flatten(spec = self._src_ego_spec)
+            neg_src_recept.flatten(spec = self._src_ego_spec, pre_agg=self._pre_agg)
           egographs_tuple += tuple(neg_src_flatten_egograph)
 
         if neg_dst_recept is not None:
           neg_dst_flatten_egograph = \
-            neg_dst_recept.flatten(spec = self._dst_ego_spec)
+            neg_dst_recept.flatten(spec = self._dst_ego_spec, pre_agg=self._pre_agg)
           egographs_tuple += tuple(neg_dst_flatten_egograph)
 
         if pos_edge_recept is not None:
